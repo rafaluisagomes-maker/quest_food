@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Food Quest</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(#79d4ff,#e8f7ff);
+  color:#17213c;
+  overflow-x:hidden;
+}
+
+#connectScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:25px;
+}
+
+.connectBox{
+  width:min(500px,94%);
+  background:white;
+  border-radius:30px;
+  padding:35px;
+  text-align:center;
+  box-shadow:0 15px 50px rgba(0,0,0,.18);
+}
+
+.connectButton{
+  border:none;
+  padding:18px 28px;
+  border-radius:18px;
+  font-size:20px;
+  font-weight:bold;
+  background:#ffd54f;
+  cursor:pointer;
+}
+
+#game{
+  display:none;
+  pointer-events:none;
+  min-height:100vh;
+}
+
+.top{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:12px;
+}
+
+.info{
+  background:#17213c;
+  color:white;
+  border-radius:14px;
+  padding:8px 13px;
+  font-weight:bold;
+}
+
+.world{
+  width:min(950px,95%);
+  height:210px;
+  position:relative;
+  margin:auto;
+  overflow:hidden;
+  border-radius:28px;
+  background:
+    linear-gradient(#80d8ff 0 58%,#7acb60 58%);
+  border:4px solid white;
+}
+
+.sun{
+  position:absolute;
+  right:30px;
+  top:20px;
+  font-size:52px;
+  animation:pulse 2s infinite alternate;
+}
+
+.tree1,.tree2{
+  position:absolute;
+  bottom:34px;
+  font-size:62px;
+}
+
+.tree1{left:5%}
+.tree2{right:6%}
+
+.shop{
+  position:absolute;
+  right:28%;
+  bottom:35px;
+  font-size:68px;
+}
+
+.road{
+  position:absolute;
+  height:48px;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#d7af76;
+}
+
+.player{
+  position:absolute;
+  left:7%;
+  bottom:27px;
+  font-size:55px;
+  transition:left 1s ease;
+  animation:walk .35s infinite alternate;
+}
+
+.friend1{
+  position:absolute;
+  left:47%;
+  bottom:29px;
+  font-size:48px;
+}
+
+.friend2{
+  position:absolute;
+  right:8%;
+  bottom:29px;
+  font-size:48px;
+}
+
+@keyframes walk{
+  from{transform:translateY(0)}
+  to{transform:translateY(-5px)}
+}
+
+@keyframes pulse{
+  to{transform:scale(1.1)}
+}
+
+.logo{
+  text-align:center;
+  font-size:clamp(38px,7vw,68px);
+  font-weight:1000;
+  margin:12px 0 2px;
+}
+
+.subtitle{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+
+.card{
+  width:min(900px,94%);
+  margin:18px auto 30px;
+  min-height:330px;
+  border-radius:28px;
+  background:#17213c;
+  color:white;
+  padding:25px;
+  text-align:center;
+}
+
+.emoji{
+  font-size:70px;
+}
+
+.question{
+  font-size:clamp(21px,4vw,30px);
+  font-weight:bold;
+  margin:12px auto 22px;
+}
+
+.options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.option{
+  border:3px solid transparent;
+  background:#27375f;
+  border-radius:17px;
+  padding:17px;
+  font-size:19px;
+  text-align:left;
+}
+
+.option.selected{
+  border-color:#ffd54f;
+  background:#4a4670;
+  transform:scale(1.02);
+}
+
+.timerTrack{
+  height:10px;
+  max-width:700px;
+  margin:15px auto;
+  border-radius:20px;
+  background:#445273;
+  overflow:hidden;
+}
+
+.timerBar{
+  height:100%;
+  background:white;
+}
+
+.big{
+  font-size:70px;
+  font-weight:bold;
+}
+
+.gold{
+  color:#ffd54f;
+}
+
+.green{
+  color:#6df1ad;
+}
+
+@media(max-width:600px){
+  .options{
+    grid-template-columns:1fr;
+  }
+
+  .world{
+    height:170px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<section id="connectScreen">
+  <div class="connectBox">
+    <div style="font-size:70px">🎮</div>
+    <h1>FOOD QUEST</h1>
+    <p>Connect the controller to begin.</p>
+
+    <button id="connectButton" class="connectButton">
+      CONNECT ARDUINO
+    </button>
+
+    <p id="connectStatus">
+      Controller not connected
+    </p>
+  </div>
+</section>
+
+
+<main id="game">
+
+  <div class="top">
+    <div class="info" id="connection">🎮 Connected</div>
+    <div class="info" id="score">⭐ 0</div>
+    <div class="info" id="record">🏆 0</div>
+    <div class="info" id="timer">⏱ 60</div>
+    <div class="info" id="reset">Record 10:00</div>
+  </div>
+
+  <div class="logo">FOOD QUEST</div>
+
+  <div class="subtitle">
+    THE ENGLISH FOOD ADVENTURE
+  </div>
+
+  <div class="world">
+
+    <div class="sun">☀️</div>
+
+    <div class="tree1">🌳</div>
+    <div class="tree2">🌳</div>
+
+    <div class="shop">🏪</div>
+
+    <div class="road"></div>
+
+    <div class="friend1">🧒🏽</div>
+    <div class="friend2">👧🏻</div>
+
+    <div id="player" class="player">
+      🧒
+    </div>
+
+  </div>
+
+  <section id="card" class="card"></section>
+
+</main>
+
+
+<script>
+
+/* =========================
+   SERIAL
+========================= */
+
+let port=null;
+let reader=null;
+let serialBuffer="";
+
+const connectButton=
+document.getElementById("connectButton");
+
+connectButton.addEventListener(
+  "click",
+  connectArduino
+);
+
+
+async function connectArduino(){
+
+  if(!("serial" in navigator)){
+
+    document.getElementById(
+      "connectStatus"
+    ).textContent=
+    "Web Serial is not supported.";
+
+    return;
+  }
+
+  try{
+
+    port=
+      await navigator.serial.requestPort();
+
+    await port.open({
+      baudRate:9600
+    });
+
+    document.getElementById(
+      "connectScreen"
+    ).style.display="none";
+
+    document.getElementById(
+      "game"
+    ).style.display="block";
+
+    send("LCD|FOOD QUEST|APERTE START");
+
+    showHome();
+
+    readSerial();
+
+  }
+
+  catch(error){
+
+    document.getElementById(
+      "connectStatus"
+    ).textContent=
+    "Connection cancelled.";
+
+  }
+
+}
+
+
+async function send(text){
+
+  if(!port || !port.writable)
+    return;
+
+  const writer=
+    port.writable.getWriter();
+
+  await writer.write(
+    new TextEncoder()
+      .encode(text+"\n")
+  );
+
+  writer.releaseLock();
+
+}
+
+
+async function readSerial(){
+
+  const decoder=
+    new TextDecoder();
+
+  while(port && port.readable){
+
+    reader=
+      port.readable.getReader();
+
+    try{
+
+      while(true){
+
+        const {value,done}=
+          await reader.read();
+
+        if(done) break;
+
+        serialBuffer+=
+          decoder.decode(
+            value,
+            {stream:true}
+          );
+
+        processBuffer();
+
+      }
+
+    }
+
+    finally{
+
+      reader.releaseLock();
+
+    }
+
+  }
+
+}
+
+
+function processBuffer(){
+
+  let lines=
+    serialBuffer.split("\n");
+
+  serialBuffer=
+    lines.pop();
+
+  lines.forEach(line=>{
+
+    let command=
+      line.trim();
+
+    if(command)
+      controller(command);
+
+  });
+
+}
+
+
+/* =========================
+   93 QUESTIONS
+========================= */
+
+const foods=[
+
+["Apple","maçã","🍎","It may be red or green."],
+["Banana","banana","🍌","It is long and yellow."],
+["Orange","laranja","🍊","It is also a colour."],
+["Grape","uva","🍇","They grow in bunches."],
+["Strawberry","morango","🍓","It is red with seeds outside."],
+["Watermelon","melancia","🍉","Green outside and red inside."],
+["Pineapple","abacaxi","🍍","It has a spiky crown."],
+["Lemon","limão","🍋","It tastes sour."],
+["Pear","pera","🍐","It is wider at the bottom."],
+["Peach","pêssego","🍑","It has a stone inside."],
+["Mango","manga","🥭","A tropical fruit."],
+["Coconut","coco","🥥","It has a hard shell."],
+["Cherry","cereja","🍒","It is small and red."],
+["Milk","leite","🥛","A white drink."],
+["Water","água","💧","We need it every day."],
+["Juice","suco","🧃","Made from fruit."],
+["Coffee","café","☕","Often drunk in the morning."],
+["Tea","chá","🫖","Made by infusing leaves."],
+["Bread","pão","🍞","Used for sandwiches."],
+["Rice","arroz","🍚","A common grain."],
+["Beans","feijão","🫘","Often eaten with rice."],
+["Pasta","macarrão","🍝","Spaghetti is one type."],
+["Cheese","queijo","🧀","Usually made from milk."],
+["Butter","manteiga","🧈","Spread on bread."],
+["Egg","ovo","🥚","A chicken lays it."],
+["Chicken","frango","🍗","A common meat."],
+["Fish","peixe","🐟","It lives in water."],
+["Salad","salada","🥗","It can contain lettuce."],
+["Potato","batata","🥔","Chips can be made from it."],
+["Carrot","cenoura","🥕","Usually orange."],
+["Cake","bolo","🍰","Common at birthday parties."]
+
+];
+
+
+let questions=[];
+
+foods.forEach(food=>{
+
+  let en=food[0];
+  let pt=food[1];
+  let emoji=food[2];
+  let clue=food[3];
+
+  questions.push({
+    emoji,
+    question:
+      `What is "${pt}" in English?`,
+    answer:en,
+    hint:clue,
+    explanation:
+      `"${en}" means "${pt}".`
+  });
+
+  questions.push({
+    emoji,
+    question:
+      `Which word matches ${emoji}?`,
+    answer:en,
+    hint:clue,
+    explanation:
+      `${emoji} is ${en}.`
+  });
+
+  questions.push({
+    emoji,
+    question:
+      `Which food matches: "${clue}"`,
+    answer:en,
+    hint:`Think about ${emoji}.`,
+    explanation:
+      `The answer is ${en}.`
+  });
+
+});
+
+
+/* =========================
+   GAME STATE
+========================= */
+
+let phase="HOME";
+
+let round=[];
+let index=0;
+
+let selection=0;
+
+let points=0;
+let highScore=0;
+
+let seconds=60;
+
+let hintUsed=false;
+
+let questionTimer=null;
+
+let explanationPage=0;
+
+let correct=false;
+
+let recordSeconds=600;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function shuffle(arr){
+
+  let a=[...arr];
+
+  for(let i=a.length-1;i>0;i--){
+
+    let j=
+      Math.floor(
+        Math.random()*(i+1)
+      );
+
+    [a[i],a[j]]=
+      [a[j],a[i]];
+
+  }
+
+  return a;
+
+}
+
+
+function wrongAnswers(answer){
+
+  return shuffle(
+    foods
+      .map(f=>f[0])
+      .filter(x=>x!==answer)
+  ).slice(0,3);
+
+}
+
+
+/* =========================
+   CONTROLLER
+========================= */
+
+function controller(command){
+
+  if(command==="JOY_UP")
+    move(-1);
+
+  if(command==="JOY_DOWN")
+    move(1);
+
+  if(command==="JOY_LEFT")
+    previous();
+
+  if(command==="JOY_RIGHT")
+    next();
+
+  if(command==="BUTTON_OK")
+    ok();
+
+  if(command==="BUTTON_HINT")
+    hint();
+
+  if(command==="BUTTON_BACK")
+    back();
+
+}
+
+
+/* =========================
+   HOME
+========================= */
+
+function showHome(){
+
+  phase="HOME";
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">🎮</div>
+
+    <h1 class="gold">
+      READY?
+    </h1>
+
+    <p>
+      Press START to begin.
+    </p>
+
+  `;
+
+  send(
+    "LCD|FOOD QUEST|START = OK"
+  );
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+function startGame(){
+
+  points=0;
+  index=0;
+
+  round=
+    shuffle(questions)
+      .slice(0,3);
+
+  travel();
+
+}
+
+
+function travel(){
+
+  phase="TRAVEL";
+
+  let positions=[
+    25,50,74
+  ];
+
+  document.getElementById(
+    "player"
+  ).style.left=
+    positions[index]+"%";
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">
+      🗺️
+    </div>
+
+    <h1>
+      NEXT FOOD STOP!
+    </h1>
+
+    <p>
+      Get ready...
+    </p>
+
+  `;
+
+  send(
+    "LCD|PROXIMA PARADA|AGUARDE"
+  );
+
+  setTimeout(()=>{
+
+    if(phase==="TRAVEL")
+      question();
+
+  },1300);
+
+}
+
+
+/* =========================
+   QUESTION
+========================= */
+
+function question(){
+
+  phase="QUESTION";
+
+  seconds=60;
+  hintUsed=false;
+  selection=0;
+
+  let q=round[index];
+
+  q.options=
+    shuffle([
+      q.answer,
+      ...wrongAnswers(q.answer)
+    ]);
+
+  drawQuestion();
+
+  send(
+    "LCD|QUESTAO "+
+    (index+1)+
+    "|60 SEG"
+  );
+
+  timerStart();
+
+}
+
+
+function drawQuestion(){
+
+  let q=round[index];
+
+  let html="";
+
+  q.options.forEach(
+    (option,i)=>{
+
+      html+=`
+
+      <div class="
+      option
+      ${i===selection
+        ?"selected":""}
+      ">
+
+      ${String.fromCharCode(65+i)}.
+      ${option}
+
+      </div>
+
+      `;
+
+    }
+  );
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">
+      ${q.emoji}
+    </div>
+
+    <div class="question">
+      ${q.question}
+    </div>
+
+    <div class="timerTrack">
+
+      <div
+      class="timerBar"
+      style="
+      width:${seconds/60*100}%
+      ">
+      </div>
+
+    </div>
+
+    <div class="options">
+      ${html}
+    </div>
+
+  `;
+
+}
+
+
+function move(direction){
+
+  if(phase!=="QUESTION")
+    return;
+
+  let q=round[index];
+
+  selection+=direction;
+
+  if(selection<0)
+    selection=q.options.length-1;
+
+  if(selection>=q.options.length)
+    selection=0;
+
+  drawQuestion();
+
+  send(
+    "LCD|OPCAO "+
+    String.fromCharCode(65+selection)+
+    "|"+q.options[selection]
+  );
+
+}
+
+
+/* =========================
+   TIMER
+========================= */
+
+function timerStart(){
+
+  clearInterval(questionTimer);
+
+  questionTimer=
+    setInterval(()=>{
+
+      if(phase!=="QUESTION")
+        return;
+
+      seconds--;
+
+      updateHUD();
+
+      if(seconds<=0){
+
+        clearInterval(questionTimer);
+
+        correct=false;
+        explanationPage=0;
+
+        send(
+          "LED|RED"
+        );
+
+        send(
+          "LCD|TEMPO ACABOU|EXPLIQUE"
+        );
+
+        explanation();
+
+      }
+      else{
+
+        drawQuestion();
+
+      }
+
+    },1000);
+
+}
+
+
+/* =========================
+   OK / START
+========================= */
+
+function ok(){
+
+  if(phase==="HOME"){
+    startGame();
+    return;
+  }
+
+  if(phase==="QUESTION"){
+    answer();
+    return;
+  }
+
+  if(phase==="HINT"){
+    resumeHint();
+    return;
+  }
+
+  if(phase==="EXPLANATION"){
+    next();
+    return;
+  }
+
+  if(phase==="RESULT"){
+    startGame();
+    return;
+  }
+
+  if(phase==="BONUS"){
+    bonusComplete();
+  }
+
+}
+
+
+/* =========================
+   ANSWER
+========================= */
+
+function answer(){
+
+  clearInterval(questionTimer);
+
+  let q=round[index];
+
+  correct=
+    q.options[selection]
+    ===q.answer;
+
+  if(correct){
+
+    points+=
+      hintUsed ? 2 : 3;
+
+    send("LED|GREEN");
+    send("LCD|CORRETO!|EXPLIQUE");
+
+  }
+
+  else{
+
+    send("LED|RED");
+    send("LCD|ERRADO|EXPLIQUE");
+
+  }
+
+  explanationPage=0;
+
+  updateHUD();
+
+  explanation();
+
+}
+
+
+/* =========================
+   HINT
+========================= */
+
+function hint(){
+
+  if(phase!=="QUESTION")
+    return;
+
+  clearInterval(questionTimer);
+
+  phase="HINT";
+  hintUsed=true;
+
+  let q=round[index];
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">
+      💡
+    </div>
+
+    <h1 class="gold">
+      HINT
+    </h1>
+
+    <p>
+      ${q.hint}
+    </p>
+
+    <p>
+      Timer paused
+    </p>
+
+  `;
+
+  /*
+    SOMENTE LCD mostra
+    instrução para Rafael.
+  */
+
+  send(
+    "LCD|RAFAEL:|DE UMA DICA"
+  );
+
+}
+
+
+function resumeHint(){
+
+  phase="QUESTION";
+
+  send(
+    "LCD|CONTINUE|"+
+    seconds+" SEG"
+  );
+
+  drawQuestion();
+  timerStart();
+
+}
+
+
+/* =========================
+   EXPLANATION
+========================= */
+
+function explanation(){
+
+  phase="EXPLANATION";
+
+  let q=round[index];
+
+  if(explanationPage===0){
+
+    document.getElementById(
+      "card"
+    ).innerHTML=`
+
+      <div class="emoji">
+        ${correct?"✅":"📘"}
+      </div>
+
+      <h1>
+        ${correct
+        ?"CORRECT!"
+        :"LET'S LEARN"}
+      </h1>
+
+      <p>
+        Correct answer:
+        <b>${q.answer}</b>
+      </p>
+
+    `;
+
+    send(
+      "LCD|RAFAEL:|EXPLIQUE"
+    );
+
+  }
+
+
+  if(explanationPage===1){
+
+    document.getElementById(
+      "card"
+    ).innerHTML=`
+
+      <div class="emoji">
+        ${q.emoji}
+      </div>
+
+      <h1>
+        EXPLANATION
+      </h1>
+
+      <p>
+        ${q.explanation}
+      </p>
+
+    `;
+
+    send(
+      "LCD|EXPLIQUE|COM SUAS PALAV."
+    );
+
+  }
+
+
+  if(explanationPage===2){
+
+    document.getElementById(
+      "card"
+    ).innerHTML=`
+
+      <div class="emoji">
+        🧠
+      </div>
+
+      <h1>
+        YOUR TURN
+      </h1>
+
+      <p>
+        Think about another example.
+      </p>
+
+    `;
+
+    send(
+      "LCD|PERGUNTE:|ENTENDEU?"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   NEXT / BACK
+========================= */
+
+function next(){
+
+  if(phase!=="EXPLANATION")
+    return;
+
+  if(explanationPage<2){
+
+    explanationPage++;
+    explanation();
+
+  }
+
+  else{
+
+    index++;
+
+    if(index<3)
+      travel();
+    else
+      finish();
+
+  }
+
+}
+
+
+function previous(){
+
+  if(
+    phase==="EXPLANATION" &&
+    explanationPage>0
+  ){
+
+    explanationPage--;
+    explanation();
+
+  }
+
+}
+
+
+function back(){
+
+  if(phase==="HINT"){
+
+    resumeHint();
+    return;
+
+  }
+
+  if(
+    phase==="EXPLANATION" &&
+    explanationPage>0
+  ){
+
+    explanationPage--;
+    explanation();
+
+  }
+
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+function finish(){
+
+  phase="RESULT";
+
+  if(points>highScore)
+    highScore=points;
+
+  updateHUD();
+
+
+  if(points===9){
+
+    document.getElementById(
+      "card"
+    ).innerHTML=`
+
+      <div class="emoji">
+        ⭐
+      </div>
+
+      <h1 class="gold">
+        PERFECT ROUND!
+      </h1>
+
+      <div class="big">
+        9 / 9
+      </div>
+
+      <p>
+        BONUS MISSION
+      </p>
+
+    `;
+
+    send(
+      "LCD|9 PONTOS!|BONUS!"
+    );
+
+    setTimeout(
+      bonus,
+      1500
+    );
+
+  }
+
+  else{
+
+    document.getElementById(
+      "card"
+    ).innerHTML=`
+
+      <div class="emoji">
+        🏁
+      </div>
+
+      <h1>
+        QUEST COMPLETE
+      </h1>
+
+      <div class="big">
+        ${points}
+      </div>
+
+      <p>
+        Press START
+      </p>
+
+    `;
+
+    send(
+      "LCD|FIM DA RODADA|"+
+      points+" PONTOS"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   BONUS
+========================= */
+
+function bonus(){
+
+  phase="BONUS";
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">
+      🏆
+    </div>
+
+    <h1 class="gold">
+      BONUS MISSION
+    </h1>
+
+    <p>
+      Name three foods in English
+      and make one complete sentence.
+    </p>
+
+  `;
+
+  send(
+    "LCD|MISSAO BONUS|RAFAEL AVALIA"
+  );
+
+}
+
+
+function bonusComplete(){
+
+  points=10;
+
+  if(points>highScore)
+    highScore=points;
+
+  phase="RESULT";
+
+  updateHUD();
+
+  send(
+    "LCD|10 PONTOS!|PARABENS!"
+  );
+
+  send(
+    "LED|GREEN"
+  );
+
+  document.getElementById(
+    "card"
+  ).innerHTML=`
+
+    <div class="emoji">
+      🏆
+    </div>
+
+    <h1 class="gold">
+      FOOD QUEST MASTER!
+    </h1>
+
+    <div class="big">
+      10 / 10
+    </div>
+
+    <p>
+      Press START to play again.
+    </p>
+
+  `;
+
+}
+
+
+/* =========================
+   RECORD RESET
+========================= */
+
+setInterval(()=>{
+
+  recordSeconds--;
+
+  if(recordSeconds<=0){
+
+    highScore=0;
+    recordSeconds=600;
+
+    send(
+      "LCD|NOVO RECORDE|VALENDO!"
+    );
+
+  }
+
+  updateHUD();
+
+},1000);
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHUD(){
+
+  document.getElementById(
+    "score"
+  ).textContent=
+    "⭐ "+points;
+
+  document.getElementById(
+    "record"
+  ).textContent=
+    "🏆 "+highScore;
+
+  document.getElementById(
+    "timer"
+  ).textContent=
+    "⏱ "+seconds;
+
+  let m=
+    Math.floor(
+      recordSeconds/60
+    );
+
+  let s=
+    recordSeconds%60;
+
+  document.getElementById(
+    "reset"
+  ).textContent=
+    "Record "+
+    String(m).padStart(2,"0")+
+    ":"+
+    String(s).padStart(2,"0");
+
+}
+
+updateHUD();
+
+</script>
+
+</body>
+</html>
