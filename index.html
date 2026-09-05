@@ -1000,13 +1000,8 @@ function hint(){
 
   `;
 
-  /*
-    SOMENTE LCD mostra
-    instrução para Rafael.
-  */
-
   send(
-    "LCD|RAFAEL:|DE UMA DICA"
+    "LCD|DICA|"+q.hint
   );
 
 }
@@ -1015,14 +1010,8 @@ function hint(){
 function resumeHint(){
 
   phase="QUESTION";
-
-  send(
-    "LCD|CONTINUE|"+
-    seconds+" SEG"
-  );
-
-  drawQuestion();
   timerStart();
+  drawQuestion();
 
 }
 
@@ -1037,117 +1026,48 @@ function explanation(){
 
   let q=round[index];
 
-  if(explanationPage===0){
+  document.getElementById(
+    "card"
+  ).innerHTML=`
 
-    document.getElementById(
-      "card"
-    ).innerHTML=`
+    <div class="emoji">
+      ${q.emoji}
+    </div>
 
-      <div class="emoji">
-        ${correct?"✅":"📘"}
-      </div>
+    <h1 class="${correct?"green":"gold"}">
+      ${correct?"CORRECT!":"INCORRECT"}
+    </h1>
 
-      <h1>
-        ${correct
-        ?"CORRECT!"
-        :"LET'S LEARN"}
-      </h1>
+    <p>
+      ${q.explanation}
+    </p>
 
-      <p>
-        Correct answer:
-        <b>${q.answer}</b>
-      </p>
+    <p style="font-size:14px;opacity:.7">
+      Press OK to continue
+    </p>
 
-    `;
+  `;
 
-    send(
-      "LCD|RAFAEL:|EXPLIQUE"
-    );
-
-  }
-
-
-  if(explanationPage===1){
-
-    document.getElementById(
-      "card"
-    ).innerHTML=`
-
-      <div class="emoji">
-        ${q.emoji}
-      </div>
-
-      <h1>
-        EXPLANATION
-      </h1>
-
-      <p>
-        ${q.explanation}
-      </p>
-
-    `;
-
-    send(
-      "LCD|EXPLIQUE|COM SUAS PALAV."
-    );
-
-  }
-
-
-  if(explanationPage===2){
-
-    document.getElementById(
-      "card"
-    ).innerHTML=`
-
-      <div class="emoji">
-        🧠
-      </div>
-
-      <h1>
-        YOUR TURN
-      </h1>
-
-      <p>
-        Think about another example.
-      </p>
-
-    `;
-
-    send(
-      "LCD|PERGUNTE:|ENTENDEU?"
-    );
-
-  }
+  send(
+    "LCD|"+(correct?"CORRETO":"ERRADO")+"|OK"
+  );
 
 }
 
 
 /* =========================
-   NEXT / BACK
+   NEXT
 ========================= */
 
 function next(){
 
-  if(phase!=="EXPLANATION")
-    return;
+  index++;
 
-  if(explanationPage<2){
-
-    explanationPage++;
-    explanation();
-
+  if(index<round.length){
+    travel();
   }
-
   else{
-
-    index++;
-
-    if(index<3)
-      travel();
-    else
-      finish();
-
+    result();
   }
 
 }
@@ -1155,36 +1075,9 @@ function next(){
 
 function previous(){
 
-  if(
-    phase==="EXPLANATION" &&
-    explanationPage>0
-  ){
-
-    explanationPage--;
-    explanation();
-
-  }
-
-}
-
-
-function back(){
-
-  if(phase==="HINT"){
-
-    resumeHint();
-    return;
-
-  }
-
-  if(
-    phase==="EXPLANATION" &&
-    explanationPage>0
-  ){
-
-    explanationPage--;
-    explanation();
-
+  if(phase==="QUESTION"){
+    index=Math.max(0,index-1);
+    travel();
   }
 
 }
@@ -1194,185 +1087,47 @@ function back(){
    RESULT
 ========================= */
 
-function finish(){
+function result(){
 
   phase="RESULT";
 
-  if(points>highScore)
+  if(points>highScore){
     highScore=points;
-
-  updateHUD();
-
-
-  if(points===9){
-
-    document.getElementById(
-      "card"
-    ).innerHTML=`
-
-      <div class="emoji">
-        ⭐
-      </div>
-
-      <h1 class="gold">
-        PERFECT ROUND!
-      </h1>
-
-      <div class="big">
-        9 / 9
-      </div>
-
-      <p>
-        BONUS MISSION
-      </p>
-
-    `;
-
-    send(
-      "LCD|9 PONTOS!|BONUS!"
-    );
-
-    setTimeout(
-      bonus,
-      1500
-    );
-
   }
-
-  else{
-
-    document.getElementById(
-      "card"
-    ).innerHTML=`
-
-      <div class="emoji">
-        🏁
-      </div>
-
-      <h1>
-        QUEST COMPLETE
-      </h1>
-
-      <div class="big">
-        ${points}
-      </div>
-
-      <p>
-        Press START
-      </p>
-
-    `;
-
-    send(
-      "LCD|FIM DA RODADA|"+
-      points+" PONTOS"
-    );
-
-  }
-
-}
-
-
-/* =========================
-   BONUS
-========================= */
-
-function bonus(){
-
-  phase="BONUS";
 
   document.getElementById(
     "card"
   ).innerHTML=`
 
     <div class="emoji">
-      🏆
+      ${points>5?"🏆":"⭐"}
     </div>
 
     <h1 class="gold">
-      BONUS MISSION
+      GAME OVER!
     </h1>
 
     <p>
-      Name three foods in English
-      and make one complete sentence.
+      Your Score: <span class="big green">${points}</span>
+    </p>
+
+    <p>
+      Best: <span class="big gold">${highScore}</span>
+    </p>
+
+    <p style="font-size:14px;opacity:.7">
+      Press OK to play again
     </p>
 
   `;
 
-  send(
-    "LCD|MISSAO BONUS|RAFAEL AVALIA"
-  );
-
-}
-
-
-function bonusComplete(){
-
-  points=10;
-
-  if(points>highScore)
-    highScore=points;
-
-  phase="RESULT";
-
   updateHUD();
 
   send(
-    "LCD|10 PONTOS!|PARABENS!"
+    "LCD|PONTOS: "+points+"|JOGAR?"
   );
-
-  send(
-    "LED|GREEN"
-  );
-
-  document.getElementById(
-    "card"
-  ).innerHTML=`
-
-    <div class="emoji">
-      🏆
-    </div>
-
-    <h1 class="gold">
-      FOOD QUEST MASTER!
-    </h1>
-
-    <div class="big">
-      10 / 10
-    </div>
-
-    <p>
-      Press START to play again.
-    </p>
-
-  `;
 
 }
-
-
-/* =========================
-   RECORD RESET
-========================= */
-
-setInterval(()=>{
-
-  recordSeconds--;
-
-  if(recordSeconds<=0){
-
-    highScore=0;
-    recordSeconds=600;
-
-    send(
-      "LCD|NOVO RECORDE|VALENDO!"
-    );
-
-  }
-
-  updateHUD();
-
-},1000);
 
 
 /* =========================
@@ -1381,40 +1136,27 @@ setInterval(()=>{
 
 function updateHUD(){
 
-  document.getElementById(
-    "score"
-  ).textContent=
+  document.getElementById("score").textContent=
     "⭐ "+points;
 
-  document.getElementById(
-    "record"
-  ).textContent=
+  document.getElementById("record").textContent=
     "🏆 "+highScore;
 
-  document.getElementById(
-    "timer"
-  ).textContent=
+  document.getElementById("timer").textContent=
     "⏱ "+seconds;
-
-  let m=
-    Math.floor(
-      recordSeconds/60
-    );
-
-  let s=
-    recordSeconds%60;
-
-  document.getElementById(
-    "reset"
-  ).textContent=
-    "Record "+
-    String(m).padStart(2,"0")+
-    ":"+
-    String(s).padStart(2,"0");
 
 }
 
-updateHUD();
+
+/* =========================
+   BONUS
+========================= */
+
+function bonusComplete(){
+
+  showHome();
+
+}
 
 </script>
 
